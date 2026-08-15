@@ -10,9 +10,13 @@ that logic into another CLI.
 
 ## Layout
 
-- `scripts/set_tonal_env.py` prompts locally for Tonal credentials.
+- `scripts/set_tonal_keychain.py` stores Tonal credentials in the macOS login
+  Keychain (preferred).
+- `scripts/set_tonal_env.py` writes them to `~/.hermes/.env` instead (portable
+  fallback).
 - `scripts/tonal_mcp_server.py` launches the built MCP server with a minimal
-  environment.
+  environment, reading credentials from the Keychain first and the env file
+  second.
 - `config/` contains read-only and full-access Hermes MCP snippets.
 - `skills/health/tonal/` contains the companion skill and its runbooks.
 
@@ -24,44 +28,20 @@ does not install or change `~/.hermes` by itself.
 Use `~/Projects` on remy-mac so the launcher defaults work without extra
 configuration.
 
-`@dlwiest/ts-tonal-client` 0.3.0 is not published to npm yet. Link the local
-client checkout before building the MCP server:
-
 ```bash
 mkdir -p ~/Projects
 cd ~/Projects
 
-git clone https://github.com/dlwiest/ts-tonal-client.git
-cd ts-tonal-client
-npm install
-npm run build
-npm link
-
-cd ~/Projects
 git clone https://github.com/dlwiest/ts-tonal-mcp.git
 cd ts-tonal-mcp
-npm link @dlwiest/ts-tonal-client
+npm install
 npm run build
 test -f ~/Projects/ts-tonal-mcp/dist/index.js
 ```
 
-In the MCP checkout, `npm link @dlwiest/ts-tonal-client` also installs the
-remaining dependencies. Do not run `npm install` there until client 0.3.0 is
-published because npm will try the registry and fail with `ETARGET`.
-
-If `npm link` fails with `EACCES` because the global prefix is not writable
-(the default `/usr/local` often is not), point npm at a writable prefix for
-both link steps rather than using `sudo`:
-
-```bash
-npm_config_prefix=~/.npm-global npm link
-```
-
-Use the same `npm_config_prefix` value for the `npm link @dlwiest/ts-tonal-client`
-step, or the link will not resolve.
-
-Once client 0.3.0 is published, a normal MCP install can replace the local
-link. Keep the declared dependency at `^0.3.0`.
+`npm install` pulls `@dlwiest/ts-tonal-client` from npm, so there is no need to
+clone or link the client separately. Verified from a clean clone: install,
+build, and the test suite all pass against the published package.
 
 The launcher defaults to:
 
@@ -82,23 +62,43 @@ precedence.
 
 ## 2. Store Tonal credentials locally
 
-From the `hermes-tonal` checkout:
+Two options. The launcher checks the Keychain first and falls back to the env
+file, so pick one.
+
+### Keychain (preferred, macOS)
+
+```bash
+python3 ~/Projects/hermes-tonal/scripts/set_tonal_keychain.py
+```
+
+Prompts for the username and password (hidden, entered twice), then writes one
+generic-password item to the login Keychain under service `tonal` and verifies
+it by reading it back. No plaintext credential is ever written to disk.
+
+It purges any prior `tonal` entry first. Keychain items are keyed by
+(service, account), so `add -U` only replaces when the account also matches —
+entering a different email would otherwise leave two items and the launcher
+would pick between them nondeterministically.
+
+Remove it with:
+
+```bash
+security delete-generic-password -s tonal
+```
+
+### Env file (portable fallback)
 
 ```bash
 python3 ~/Projects/hermes-tonal/scripts/set_tonal_env.py
 ```
 
-The script prompts for the Tonal username and password, hides password input,
-and updates only `TONAL_USERNAME` and `TONAL_PASSWORD` in the single flat
-Hermes environment file:
+Updates only `TONAL_USERNAME` and `TONAL_PASSWORD` in the single flat Hermes
+environment file `~/.hermes/.env`, hiding password input, preserving unrelated
+lines, and forcing mode `0600`. This is the only option on Linux.
 
-```text
-~/.hermes/.env
-```
-
-It honors `HERMES_HOME` when that variable is set. It does not print either
-credential, and it keeps unrelated lines in the file. Do not put credentials
-in `config.yaml`, a Telegram message, or this repository.
+Both scripts honor `HERMES_HOME` and neither prints a credential. The launcher
+reports which source it used on stderr at startup. Do not put credentials in
+`config.yaml`, a Telegram message, or this repository.
 
 ## 3. Merge the MCP configuration
 
@@ -202,11 +202,17 @@ skill are working together.
 
 ## Security model
 
-Hermes secrets stay in one flat local file, `~/.hermes/.env`. The launcher
-reads only `TONAL_*` assignments from that file. It passes the server a minimal
-environment containing the two Tonal credentials plus the small set of system
-variables Node needs. The rest of the Hermes process environment is not
-inherited by the MCP server.
+Credentials live in the macOS login Keychain when available, falling back to
+the single flat `~/.hermes/.env`. The Keychain path is preferred because it
+keeps the password out of a plaintext file entirely; Hermes itself has no
+Keychain secret source, so the launcher bridges the two.
+
+The launcher reads only `TONAL_*` values from whichever source it uses, then
+execs the server with a MINIMAL environment: the two Tonal credentials plus a
+small allowlist of system variables Node needs. The rest of the Hermes process
+environment is not inherited. Verified by probe: the child sees 7 variables,
+and planted `ANTHROPIC_API_KEY` / `AWS_SECRET_ACCESS_KEY` values do not reach
+it.
 
 The skill declares both credential variables in
 `required_environment_variables`. Hermes uses that declaration to pass them
