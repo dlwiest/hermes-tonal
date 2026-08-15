@@ -126,8 +126,13 @@ tool that lacks `readOnlyHint: true`. In the full profile, that covers create,
 update, and delete. Changing the setting to `full` skips this MCP
 write-approval gate.
 
-Hermes also creates a toolset named `mcp-tonal`. If the Telegram configuration
-uses an explicit `platform_toolsets` list, include `mcp-tonal` there.
+Hermes also creates a toolset named `mcp-tonal`. No action is normally needed:
+enabled MCP servers are available on every platform by default. A platform only
+restricts them if its `platform_toolsets` list explicitly names one or more MCP
+**server** names (`tonal`, not `mcp-tonal`), which turns that list into an
+allowlist — or if it contains the `no_mcp` sentinel, which disables all MCP
+servers for that platform. Listing ordinary toolsets such as `terminal` does not
+restrict MCP.
 
 ## 4. Reload Hermes
 
@@ -214,10 +219,17 @@ environment is not inherited. Verified by probe: the child sees 7 variables,
 and planted `ANTHROPIC_API_KEY` / `AWS_SECRET_ACCESS_KEY` values do not reach
 it.
 
-The skill declares both credential variables in
-`required_environment_variables`. Hermes uses that declaration to pass them
-through when the skill is used in sandboxed execution. Without it,
-password-like variables are stripped.
+The skill deliberately declares NO `required_environment_variables`. The MCP
+launcher owns authentication, and the MCP subprocess environment is built from
+`mcp_servers.tonal` alone — `tools/mcp_tool.py::_build_safe_env` passes a safe
+baseline (PATH, HOME, `XDG_*`), secret-source values, and the server config's
+own `env:` block, and never consults a skill. The skill-declaration mechanism
+(`tools/env_passthrough.py`) is read only by the `terminal` and `execute_code`
+sandboxes, which this skill does not use. Declaring the variables would have
+prompted for credentials the Keychain already holds, for no benefit.
+
+If a future CLI one-shot is ever added here, that is when the declaration
+becomes necessary.
 
 ## Related projects
 

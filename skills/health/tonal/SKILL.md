@@ -9,15 +9,6 @@ metadata:
   hermes:
     tags: [tonal, fitness, recovery, workout-planning]
     category: health
-required_environment_variables:
-  - name: TONAL_USERNAME
-    prompt: "Tonal account username"
-    help: "Enter the username used to sign in to Tonal. Hermes stores it in the local environment file for authenticated Tonal workflows."
-    required_for: "authenticating Tonal data and custom-workout requests"
-  - name: TONAL_PASSWORD
-    prompt: "Tonal account password"
-    help: "Enter the password used to sign in to Tonal. Use the local credential script so input stays hidden and never send the password in chat."
-    required_for: "authenticating Tonal data and custom-workout requests"
 ---
 
 # Tonal
