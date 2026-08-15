@@ -1,0 +1,33 @@
+# Full Tonal profile, including create, update, and delete operations.
+# Prefer config/mcp_servers.tonal.yaml unless Hermes must manage workouts.
+# The read-only profile limits the effect of an accidental or malicious call.
+#
+# Merge the `tonal` mapping under the existing `mcp_servers` key in
+# ~/.hermes/config.yaml. Do not replace the rest of that file.
+#
+# `untrusted` requires approval for every tool that is not marked with
+# readOnlyHint: true. That means create, update, and delete require approval.
+# Using `full` skips this MCP write-approval gate and is not recommended here.
+mcp_servers:
+  tonal:
+    command: python3
+    args:
+      - /Users/dlwiest/Projects/hermes-tonal/scripts/tonal_mcp_server.py
+    enabled: true
+    timeout: 300
+    trust: untrusted
+    tools:
+      # These are raw server tool names. Do not add the mcp__tonal__ prefix.
+      include:
+        - get_muscle_readiness
+        - get_user_stats
+        - get_recent_progress
+        - get_recent_workouts
+        - list_custom_workouts
+        - delete_custom_workout
+        - get_custom_workout_details
+        - create_workout
+        - get_workout_for_editing
+        - update_workout
+        - get_movements
+        - search_movements

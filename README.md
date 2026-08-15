@@ -1,0 +1,229 @@
+# hermes-tonal
+
+Hermes Agent integration for Tonal. It registers
+[`ts-tonal-mcp`](https://github.com/dlwiest/ts-tonal-mcp) as a local MCP
+server and adds a companion skill for recovery interpretation and workout
+authoring.
+
+The MCP server owns the schemas and conversion logic. This repo does not copy
+that logic into another CLI.
+
+## Layout
+
+- `scripts/set_tonal_env.py` prompts locally for Tonal credentials.
+- `scripts/tonal_mcp_server.py` launches the built MCP server with a minimal
+  environment.
+- `config/` contains read-only and full-access Hermes MCP snippets.
+- `skills/health/tonal/` contains the companion skill and its runbooks.
+
+These instructions target remy-mac. Run them on that machine. This repository
+does not install or change `~/.hermes` by itself.
+
+## 1. Clone and build the MCP server
+
+Use `~/Projects` on remy-mac so the launcher defaults work without extra
+configuration.
+
+`@dlwiest/ts-tonal-client` 0.3.0 is not published to npm yet. Link the local
+client checkout before building the MCP server:
+
+```bash
+mkdir -p ~/Projects
+cd ~/Projects
+
+git clone https://github.com/dlwiest/ts-tonal-client.git
+cd ts-tonal-client
+npm install
+npm run build
+npm link
+
+cd ~/Projects
+git clone https://github.com/dlwiest/ts-tonal-mcp.git
+cd ts-tonal-mcp
+npm link @dlwiest/ts-tonal-client
+npm run build
+test -f ~/Projects/ts-tonal-mcp/dist/index.js
+```
+
+In the MCP checkout, `npm link @dlwiest/ts-tonal-client` also installs the
+remaining dependencies. Do not run `npm install` there until client 0.3.0 is
+published because npm will try the registry and fail with `ETARGET`.
+
+If `npm link` fails with `EACCES` because the global prefix is not writable
+(the default `/usr/local` often is not), point npm at a writable prefix for
+both link steps rather than using `sudo`:
+
+```bash
+npm_config_prefix=~/.npm-global npm link
+```
+
+Use the same `npm_config_prefix` value for the `npm link @dlwiest/ts-tonal-client`
+step, or the link will not resolve.
+
+Once client 0.3.0 is published, a normal MCP install can replace the local
+link. Keep the declared dependency at `^0.3.0`.
+
+The launcher defaults to:
+
+```text
+~/Projects/ts-tonal-mcp/dist/index.js
+```
+
+If the MCP repo lives elsewhere, add this non-secret setting to
+`~/.hermes/.env`:
+
+```dotenv
+TONAL_MCP_SERVER_PATH=/absolute/path/to/ts-tonal-mcp/dist/index.js
+```
+
+The credential script preserves that line. The launcher also accepts
+`TONAL_MCP_SERVER_PATH` in its own process environment, with that value taking
+precedence.
+
+## 2. Store Tonal credentials locally
+
+From the `hermes-tonal` checkout:
+
+```bash
+python3 ~/Projects/hermes-tonal/scripts/set_tonal_env.py
+```
+
+The script prompts for the Tonal username and password, hides password input,
+and updates only `TONAL_USERNAME` and `TONAL_PASSWORD` in the single flat
+Hermes environment file:
+
+```text
+~/.hermes/.env
+```
+
+It honors `HERMES_HOME` when that variable is set. It does not print either
+credential, and it keeps unrelated lines in the file. Do not put credentials
+in `config.yaml`, a Telegram message, or this repository.
+
+## 3. Merge the MCP configuration
+
+Choose one config file:
+
+- `config/mcp_servers.tonal.yaml` exposes nine read-only tools. This is the
+  recommended default because an accidental call cannot change custom
+  workouts.
+- `config/mcp_servers.tonal.full.yaml` exposes all 12 tools, including create,
+  update, and delete.
+
+Merge the `tonal` mapping under the existing `mcp_servers` key in
+`~/.hermes/config.yaml`. Do not replace the whole config file and do not add a
+second `mcp_servers` key. The checked-in launcher path assumes this repo is at
+`/Users/dlwiest/Projects/hermes-tonal`; update that argument if the clone is
+elsewhere.
+
+Both snippets set `timeout: 300` explicitly. Their `tools.include` entries are
+raw MCP tool names such as `get_muscle_readiness`. Prefixed registry names such
+as `mcp__tonal__get_muscle_readiness` do not match this filter and would
+silently hide the tools.
+
+Both snippets use `trust: untrusted`. Hermes then requests approval for each
+tool that lacks `readOnlyHint: true`. In the full profile, that covers create,
+update, and delete. Changing the setting to `full` skips this MCP
+write-approval gate.
+
+Hermes also creates a toolset named `mcp-tonal`. If the Telegram configuration
+uses an explicit `platform_toolsets` list, include `mcp-tonal` there.
+
+## 4. Reload Hermes
+
+Reload or restart the Hermes gateway and its MCP connections after merging the
+configuration. If the gateway is run directly, stop the existing process and
+start `hermes gateway` again. If it is supervised, use the same service manager
+that normally restarts it.
+
+This reload is required before the Tonal tools appear in Telegram sessions.
+Changing the YAML while the gateway keeps running is not enough.
+
+## 5. Install the companion skill
+
+Hermes discovers skills recursively. There is no
+`hermes skills install <local-dir>` command and no separate registration step.
+
+The recommended setup keeps this Git checkout as the source of truth. Merge
+this into `~/.hermes/config.yaml`:
+
+```yaml
+skills:
+  external_dirs:
+    - /Users/dlwiest/Projects/hermes-tonal/skills
+```
+
+This survives `git pull` without a second copy step. If `skills` or
+`external_dirs` already exists, add the directory to the existing mapping or
+list instead of creating a duplicate key.
+
+The copy-based alternative is:
+
+```bash
+mkdir -p ~/.hermes/skills/health/tonal
+cp -R ~/Projects/hermes-tonal/skills/health/tonal/. \
+  ~/.hermes/skills/health/tonal/
+```
+
+The containing directory must remain named `tonal`, exactly matching
+`name: tonal` in `SKILL.md`.
+
+A skill added during a session is invisible to that session. Start a new
+Hermes or Telegram session after installation.
+
+## 6. Verify discovery
+
+Run:
+
+```bash
+hermes mcp list
+```
+
+The recommended profile should show the Tonal equivalent of:
+
+```text
+tonal ... 9 selected ✓ enabled
+```
+
+The full profile should show:
+
+```text
+tonal ... 12 selected ✓ enabled
+```
+
+If it reports zero selected tools, check that `tools.include` uses raw names
+without `mcp__tonal__`. If Tonal is absent, check the launcher path, the built
+`dist/index.js`, and gateway logs. The launcher reports missing credentials or
+entry points without printing secret values.
+
+After discovery, start a new session and ask for current muscle readiness. A
+successful answer proves the gateway, MCP server, Tonal login, and companion
+skill are working together.
+
+## Security model
+
+Hermes secrets stay in one flat local file, `~/.hermes/.env`. The launcher
+reads only `TONAL_*` assignments from that file. It passes the server a minimal
+environment containing the two Tonal credentials plus the small set of system
+variables Node needs. The rest of the Hermes process environment is not
+inherited by the MCP server.
+
+The skill declares both credential variables in
+`required_environment_variables`. Hermes uses that declaration to pass them
+through when the skill is used in sandboxed execution. Without it,
+password-like variables are stripped.
+
+## Related projects
+
+This integration supersedes
+[`clawdbot-tonal`](https://github.com/dlwiest/clawdbot-tonal), whose recovery
+and workout-planning guidance is carried into the companion skill.
+
+- [`ts-tonal-mcp`](https://github.com/dlwiest/ts-tonal-mcp) provides the MCP
+  tools and workout conversion.
+- [`ts-tonal-client`](https://github.com/dlwiest/ts-tonal-client) provides the
+  Tonal API client.
+
+There is intentionally no copied `tonal.mjs` or one-shot CLI here. If a future
+cron workflow has a concrete need that MCP cannot serve, a narrow one-shot can
+be considered then without duplicating workout conversion.

@@ -1,0 +1,27 @@
+# Recommended read-only Tonal profile.
+# Merge the `tonal` mapping under the existing `mcp_servers` key in
+# ~/.hermes/config.yaml. Do not replace the rest of that file.
+#
+# `untrusted` requires approval for every tool that is not marked with
+# readOnlyHint: true. Using `full` skips this MCP write-approval gate.
+# Keep `untrusted` if you later enable write tools.
+mcp_servers:
+  tonal:
+    command: python3
+    args:
+      - /Users/dlwiest/Projects/hermes-tonal/scripts/tonal_mcp_server.py
+    enabled: true
+    timeout: 300
+    trust: untrusted
+    tools:
+      # These are raw server tool names. Do not add the mcp__tonal__ prefix.
+      include:
+        - get_muscle_readiness
+        - get_user_stats
+        - get_recent_progress
+        - get_recent_workouts
+        - list_custom_workouts
+        - get_custom_workout_details
+        - get_workout_for_editing
+        - get_movements
+        - search_movements
