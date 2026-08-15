@@ -156,8 +156,10 @@ def main() -> int:
     except (OSError, UnicodeError, ValueError) as error:
         return fail(f"could not read {env_path}: {error}")
 
-    # Keychain wins over the plaintext env file when both are present. Non-credential
-    # settings such as TONAL_MCP_SERVER_PATH still come from the env file either way.
+    # Keychain wins over the plaintext env file when both are present. Non-secret
+    # settings such as TONAL_MCP_SERVER_PATH belong in config.yaml (the server's
+    # `env:` block, which Hermes merges into this process environment); the env
+    # file is still read as a fallback.
     source = f"env file {env_path}"
     keychain_values = load_keychain_values()
     if keychain_values:
@@ -185,8 +187,9 @@ def main() -> int:
     if not server_path.is_file():
         return fail(
             f"MCP server entry point not found at {server_path}. "
-            "Clone and build ts-tonal-mcp there, or set "
-            f"TONAL_MCP_SERVER_PATH in {env_path}."
+            "Clone and build ts-tonal-mcp there, or set TONAL_MCP_SERVER_PATH in "
+            "the mcp_servers.tonal env block of ~/.hermes/config.yaml "
+            f"(or, as a fallback, in {env_path})."
         )
 
     node = shutil.which("node", path=os.environ.get("PATH", os.defpath))

@@ -14,6 +14,12 @@ mcp_servers:
     args:
       - /Users/dlwiest/Projects/hermes-tonal/scripts/tonal_mcp_server.py
     enabled: true
+    # Non-secret settings go here, not in ~/.hermes/.env. Uncomment and set an
+    # absolute path if ts-tonal-mcp is not at ~/Projects/ts-tonal-mcp.
+    # Credentials are NOT listed here: the launcher reads them from the Keychain
+    # (or the env file) itself, so they never appear in config.yaml.
+    # env:
+    #   TONAL_MCP_SERVER_PATH: /absolute/path/to/ts-tonal-mcp/dist/index.js
     timeout: 300
     trust: untrusted
     tools:

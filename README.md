@@ -49,16 +49,28 @@ The launcher defaults to:
 ~/Projects/ts-tonal-mcp/dist/index.js
 ```
 
-If the MCP repo lives elsewhere, add this non-secret setting to
-`~/.hermes/.env`:
+If the MCP repo lives elsewhere, override the path. `TONAL_MCP_SERVER_PATH` is a
+non-secret setting, so it belongs in `config.yaml` rather than the env file —
+Hermes convention is secrets in `.env` or the Keychain, everything else in
+`config.yaml`. Add it to the server's `env:` block:
+
+```yaml
+mcp_servers:
+  tonal:
+    env:
+      TONAL_MCP_SERVER_PATH: /absolute/path/to/ts-tonal-mcp/dist/index.js
+```
+
+Hermes merges that block into the launcher's process environment, and the
+launcher prefers a process-environment value over the env file.
+
+Setting it in `~/.hermes/.env` still works as a fallback:
 
 ```dotenv
 TONAL_MCP_SERVER_PATH=/absolute/path/to/ts-tonal-mcp/dist/index.js
 ```
 
-The credential script preserves that line. The launcher also accepts
-`TONAL_MCP_SERVER_PATH` in its own process environment, with that value taking
-precedence.
+The credential scripts preserve that line. If both are set, `config.yaml` wins.
 
 ## 2. Store Tonal credentials locally
 
