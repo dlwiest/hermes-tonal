@@ -1,7 +1,9 @@
 # Workout authoring runbook
 
 Load this runbook before calling `mcp__tonal__create_workout` or
-`mcp__tonal__update_workout`.
+`mcp__tonal__update_workout`. `mcp__tonal__estimate_workout_duration` accepts
+the same `exercises` shape as both and writes nothing, so it is the safe way to
+check a draft before committing it.
 
 ## Safe authoring sequence
 
@@ -13,6 +15,11 @@ Load this runbook before calling `mcp__tonal__create_workout` or
 6. Choose uniform programming or explicit `setDetails` for each exercise.
 7. Check alternating-movement totals.
 8. Preview the complete exercise list before a write.
+9. Optionally call `mcp__tonal__estimate_workout_duration` with the same
+   `exercises` payload to get Tonal's own duration for the draft. It creates
+   and modifies nothing, so use it whenever the user gave a time budget, asked
+   how long the session will take, or the draft is long enough that the answer
+   matters. Report the estimate before writing, not after.
 
 Do not infer a movement identifier or exact name from ordinary gym naming.
 The MCP server resolves the supplied name against Tonal's movement list.
@@ -230,3 +237,4 @@ Before creating or updating, verify:
 - setup metadata supports the grouping, or missing data is acknowledged
 - `setDetails` is used wherever sets differ
 - an update contains the complete exercise and set list
+- a duration estimate was offered or taken when the user implied a time budget
