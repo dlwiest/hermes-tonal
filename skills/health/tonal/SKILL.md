@@ -124,6 +124,15 @@ For history or trends, choose the narrowest tool:
 - `get_recent_workouts` for workout records and recent summary data.
 - `get_recent_progress` for recent frequency and trend analysis.
 - `get_user_stats` for broader fitness statistics and streak information.
+- `get_goal_metrics` for Tonal's own weekly goal targets and whether the
+  current week is on pace against them.
+
+Goal metrics are weekly, and Tonal serves a target for a week whether or not
+it was trained. So a target with no actual means that week has no recorded
+activity yet, not that the tool failed. The report names the most recent week
+that does have an actual; use that rather than implying the current week is a
+zero. Targets are only available for roughly the last nine weeks, so do not
+promise historical target comparisons.
 
 For existing custom workouts:
 
