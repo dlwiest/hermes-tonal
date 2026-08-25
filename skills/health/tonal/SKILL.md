@@ -27,6 +27,7 @@ The raw MCP names in Hermes configuration become these callable tools:
 - `mcp__tonal__get_muscle_readiness`
 - `mcp__tonal__get_user_stats`
 - `mcp__tonal__get_recent_progress`
+- `mcp__tonal__get_goal_metrics`
 - `mcp__tonal__get_recent_workouts`
 - `mcp__tonal__list_custom_workouts`
 - `mcp__tonal__delete_custom_workout`
@@ -36,8 +37,9 @@ The raw MCP names in Hermes configuration become these callable tools:
 - `mcp__tonal__update_workout`
 - `mcp__tonal__get_movements`
 - `mcp__tonal__search_movements`
+- `mcp__tonal__estimate_workout_duration`
 
-A read-only installation exposes nine of these. The three write tools are
+A read-only installation exposes eleven of these. The three write tools are
 `create_workout`, `update_workout`, and `delete_custom_workout`. If a write
 tool is absent, explain that the read-only profile is active. Do not try to
 work around the allowlist.
@@ -54,6 +56,8 @@ Reach for Tonal when the user asks about:
 - custom workouts already saved on Tonal
 - valid Tonal movement names or movement characteristics
 - creating, editing, or deleting a custom workout
+- weekly goal targets and whether the current week is on pace
+- how long a planned workout will take, before committing to it
 
 Use current tool data rather than remembered readiness or workout state.
 Readiness changes over time. If a tool fails, report the failure without

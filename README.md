@@ -116,10 +116,10 @@ reports which source it used on stderr at startup. Do not put credentials in
 
 Choose one config file:
 
-- `config/mcp_servers.tonal.yaml` exposes nine read-only tools. This is the
+- `config/mcp_servers.tonal.yaml` exposes eleven read-only tools. This is the
   recommended default because an accidental call cannot change custom
   workouts.
-- `config/mcp_servers.tonal.full.yaml` exposes all 12 tools, including create,
+- `config/mcp_servers.tonal.full.yaml` exposes all 14 tools, including create,
   update, and delete.
 
 Merge the `tonal` mapping under the existing `mcp_servers` key in
@@ -199,13 +199,13 @@ hermes mcp list
 The recommended profile should show the Tonal equivalent of:
 
 ```text
-tonal ... 9 selected ✓ enabled
+tonal ... 11 selected ✓ enabled
 ```
 
 The full profile should show:
 
 ```text
-tonal ... 12 selected ✓ enabled
+tonal ... 14 selected ✓ enabled
 ```
 
 If it reports zero selected tools, check that `tools.include` uses raw names
