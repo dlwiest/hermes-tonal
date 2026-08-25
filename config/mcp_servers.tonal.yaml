@@ -25,9 +25,11 @@ mcp_servers:
         - get_muscle_readiness
         - get_user_stats
         - get_recent_progress
+        - get_goal_metrics
         - get_recent_workouts
         - list_custom_workouts
         - get_custom_workout_details
         - get_workout_for_editing
         - get_movements
         - search_movements
+        - estimate_workout_duration
