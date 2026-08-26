@@ -29,6 +29,7 @@ mcp_servers:
         - get_user_stats
         - get_recent_progress
         - get_goal_metrics
+        - get_strength_scores
         - get_recent_workouts
         - list_custom_workouts
         - delete_custom_workout
