@@ -144,17 +144,10 @@ def _minimal_environment(values: dict[str, str]) -> dict[str, str]:
     return environment
 
 
-def fail(message: str) -> int:
-    print(f"tonal_mcp_server.py: {message}", file=sys.stderr)
-    return 1
-
-
-def main() -> int:
+def resolve_tonal_values() -> tuple[dict[str, str], str, Path]:
+    """Load Tonal settings, preferring Keychain credentials over the env file."""
     env_path = hermes_home() / ".env"
-    try:
-        values = load_tonal_values(env_path)
-    except (OSError, UnicodeError, ValueError) as error:
-        return fail(f"could not read {env_path}: {error}")
+    values = load_tonal_values(env_path)
 
     # Keychain wins over the plaintext env file when both are present. Non-secret
     # settings such as TONAL_MCP_SERVER_PATH belong in config.yaml (the server's
@@ -165,6 +158,20 @@ def main() -> int:
     if keychain_values:
         values = {**values, **keychain_values}
         source = f"login Keychain (service '{KEYCHAIN_SERVICE}')"
+
+    return values, source, env_path
+
+
+def fail(message: str) -> int:
+    print(f"tonal_mcp_server.py: {message}", file=sys.stderr)
+    return 1
+
+
+def main() -> int:
+    try:
+        values, source, env_path = resolve_tonal_values()
+    except (OSError, UnicodeError, ValueError) as error:
+        return fail(f"could not read {hermes_home() / '.env'}: {error}")
 
     missing = [
         name

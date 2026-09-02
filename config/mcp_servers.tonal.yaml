@@ -28,6 +28,8 @@ mcp_servers:
         - get_goal_metrics
         - get_strength_scores
         - list_workout_activities
+        - get_workout_activity_details
+        - get_workout_summary
         - get_recent_workouts
         - list_custom_workouts
         - get_custom_workout_details

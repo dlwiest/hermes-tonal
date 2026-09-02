@@ -2,13 +2,22 @@
 
 Use `mcp__tonal__get_strength_scores` for Tonal's headline Strength Score: the current Overall, Upper, Core, and Lower scores plus a per-activity trend. Do not substitute `mcp__tonal__get_goal_metrics`. Its Functional Strength Score is a separate weekly goal metric, not the headline Strength Score.
 
-Use `mcp__tonal__list_workout_activities` to enumerate performed activity dates and `workoutActivityId` values for later inspection. It discovers IDs through Strength Score history; it does not call either capped workout-list endpoint.
+Use `mcp__tonal__list_workout_activities` to page completed workout activities
+and obtain exact activity IDs for later inspection.
 
 ## Lookback semantics
 
-The optional `days` argument on both tools is a calendar-day lookback window. It is never a workout count, activity count, or row count. Pass a positive integer only when the user requests a time window. Omit it to query available strength-score history from account creation.
+The optional `days` argument on `get_strength_scores` is a calendar-day
+lookback window. It is never a workout count, activity count, or row count.
+Pass a positive integer only when the user requests a time window. Omit it to
+query available strength-score history from account creation.
 
-A small window can legitimately return no history points when the most recent scored activity falls outside that many calendar days. This is not an error and does not establish that the account has no older history. Report it as zero scored activities in the requested window. For `get_strength_scores`, still use the current regional scores returned by the tool. If older context or IDs are needed, retry with a wider calendar-day window or omit `days`.
+A small window can legitimately return no history points when the most recent
+scored activity falls outside that many calendar days. This is not an error
+and does not establish that the account has no older history. Report it as
+zero scored activities in the requested window. For `get_strength_scores`,
+still use the current regional scores returned by the tool. If older trend
+context is needed, retry with a wider calendar-day window or omit `days`.
 
 ## Reading Strength Scores
 
@@ -20,12 +29,26 @@ A small window can legitimately return no history points when the most recent sc
 
 ## Enumerating Activity IDs
 
-`list_workout_activities` makes one Strength Score history request per call, sorts the discovered rows newest first, and applies `startIndex` and `pageSize` only to the rendered result. These presentation arguments are not Tonal API pagination. Never claim that the capped Tonal workout lists were paged, and never describe `days` as the number of rows requested.
+`list_workout_activities` passes `offset` and `limit` to Tonal's completed
+workout-activity endpoint. `offset` defaults to 0; `limit` defaults to 20 and
+must be between 1 and 100.
 
-The discovered count and earliest/latest activity times describe the complete pre-slice result for the requested Strength Score history window. `Showing X..Y of N` describes only the rendered page. `Presentation truncated: yes` means some discovered rows are not rendered on that page. Follow `nextStartIndex` only when more presentation rows are needed; each call performs a fresh single history request and local slice.
+Tonal returns this collection oldest first: offset 0 selects the account's
+oldest activities, and increasing the offset moves toward newer activities.
+The tool sorts only the selected page by `beginTime` descending for
+readability. Its oldest/newest `beginTime` range describes that page, not the
+account. A `nextOffset` is shown when Tonal returns a full page; follow it to
+inspect the next source page. For recent history, use `get_recent_workouts`
+instead. Its activity-summary IDs are the same IDs accepted by
+`get_workout_activity_details` and `get_workout_summary`.
 
-The returned `workoutActivityId` values are enumeration keys for later activity inspection. Preserve the exact ID. When a detail-inspection tool is available, inspect one activity at a time rather than treating this compact enumeration as activity detail or a bulk export. In any later detail report, omitted load fields mean unknown, never zero.
+Preserve an activity's exact ID. Call `get_workout_activity_details` for
+performed sets or `get_workout_summary` for Tonal's movement-level summary.
+Inspect one activity at a time rather than treating the compact list as detail
+or a bulk export. Omitted load fields mean unknown, never zero.
 
-Completeness is always source-relative: all IDs Tonal emitted through Strength Score history for the requested lookback. Do not broaden that into a claim that every possible Tonal activity class must emit a Strength Score history row. A complete presentation page is not proof of completeness outside that named source and window, and a truncated page must never be described as a complete displayed list. If a later multi-activity sweep is interrupted or any detail fails, describe the sweep as incomplete even when some records succeeded.
+Completeness is page-relative unless every source page was fetched. If a
+multi-page sweep is interrupted or any request fails, describe it as
+incomplete even when some records succeeded.
 
 Keep conclusions scoped to the reported window. Strength Score is a training trend, not a medical assessment, and it should not override current pain, illness, fatigue, or the user's stated condition.

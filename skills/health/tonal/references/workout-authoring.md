@@ -21,6 +21,11 @@ check a draft before committing it.
    how long the session will take, or the draft is long enough that the answer
    matters. Report the estimate before writing, not after.
 
+This is a planning estimate, not a completed-session duration field. For
+performed activities, `totalDuration` is wall clock, `activeDuration` is
+exactly `timeUnderTension`, and `restDuration` is always 0. Do not use the
+active value as elapsed workout length or the rest value as measured rest.
+
 Do not infer a movement identifier or exact name from ordinary gym naming.
 The MCP server resolves the supplied name against Tonal's movement list.
 

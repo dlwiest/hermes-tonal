@@ -30,6 +30,8 @@ The raw MCP names in Hermes configuration become these callable tools:
 - `mcp__tonal__get_goal_metrics`
 - `mcp__tonal__get_strength_scores`
 - `mcp__tonal__list_workout_activities`
+- `mcp__tonal__get_workout_activity_details`
+- `mcp__tonal__get_workout_summary`
 - `mcp__tonal__get_recent_workouts`
 - `mcp__tonal__list_custom_workouts`
 - `mcp__tonal__delete_custom_workout`
@@ -41,7 +43,7 @@ The raw MCP names in Hermes configuration become these callable tools:
 - `mcp__tonal__search_movements`
 - `mcp__tonal__estimate_workout_duration`
 
-A read-only installation exposes thirteen of these. The three write tools are
+A read-only installation exposes fifteen of these. The three write tools are
 `create_workout`, `update_workout`, and `delete_custom_workout`. If a write
 tool is absent, explain that the read-only profile is active. Do not try to
 work around the allowlist.
@@ -61,6 +63,11 @@ Reach for Tonal when the user asks about:
 - weekly goal targets and whether the current week is on pace
 - headline Strength Score by body region or per-activity strength trends
 - performed workout activity dates and IDs for later activity inspection
+- a performed session's per-set reps, resistance, one-rep max, volume, or
+  range of motion
+- Tonal's own per-movement summary for a performed session
+- exporting private health data to a local file without putting it in model
+  context
 - how long a planned workout will take, before committing to it
 
 Use current tool data rather than remembered readiness or workout state.
@@ -125,7 +132,10 @@ For a quick training recommendation:
 
 For history or trends, choose the narrowest tool:
 
-- `get_recent_workouts` for workout records and recent summary data.
+- `get_recent_workouts` for recent workout records and summary data. Its
+  activity-summary IDs are directly usable with `get_workout_activity_details`
+  and `get_workout_summary`, so this is the normal recent-session drill-in
+  path.
 - `get_recent_progress` for recent frequency and trend analysis.
 - `get_user_stats` for broader fitness statistics and streak information.
 - `get_goal_metrics` for Tonal's own weekly goal targets and whether the
@@ -133,12 +143,24 @@ For history or trends, choose the narrowest tool:
 - `get_strength_scores` for Tonal's headline current Strength Score and its
   per-activity trend. This is distinct from the weekly Functional Strength
   Score reported by `get_goal_metrics`.
-- `list_workout_activities` to enumerate performed activity IDs for later
-  inspection. Its `days` argument is a calendar-day window, while
-  `startIndex` and `pageSize` only page the already-fetched presentation.
+- `list_workout_activities` for deep enumeration of older completed activity
+  records. Tonal selects pages oldest first; the tool sorts only the selected
+  page newest first, so offset 0 is not recent history.
+- `get_workout_activity_details` for ordered performed sets, including
+  catalog-resolved movement names, reps, resistance, one-rep max, on-machine
+  volume, and range of motion.
+- `get_workout_summary` for Tonal's own per-movement aggregates.
+
+For completed-session duration, keep the fields distinct: `totalDuration` (or
+summary `duration`) is wall-clock time, while `activeDuration` is exactly the
+same as `timeUnderTension`. `restDuration` is always 0 and is not usable rest
+time. One measured session was 182 minutes wall clock but only 6 minutes under
+tension. Never call the latter the workout's elapsed duration.
 
 Load [references/strength-and-activity-history.md](references/strength-and-activity-history.md)
-before interpreting Strength Score coverage or enumerating activity IDs.
+before interpreting Strength Score coverage. Load
+[references/activity-details-and-export.md](references/activity-details-and-export.md)
+before inspecting a performed session or creating a health export.
 
 For movement discovery or workout planning:
 
@@ -160,6 +182,21 @@ For existing custom workouts:
 2. Use `get_custom_workout_details` for a human-readable inspection.
 3. Use `get_workout_for_editing` only when an edit-ready structure or
    lossless per-set data is needed.
+
+## Health exports
+
+`getHealthExport` is intentionally not an MCP tool: a detailed account export
+can be tens of megabytes and must not enter model context. When the user asks
+for an export, run the local script instead:
+
+```bash
+python3 ~/Projects/hermes-tonal/scripts/tonal_health_export.py --output ~/tonal-health-export.json
+```
+
+The script writes private JSON to disk and prints only its absolute path. Add
+filters such as `--start-date`, `--end-date`, or `--limit`, and opt into set
+details with `--include-set-details true`. Never read or paste the resulting
+file into chat unless the user explicitly asks for a bounded inspection.
 
 ## Workout authoring
 
@@ -211,9 +248,12 @@ actual tool result rather than assuming Tonal accepted the change.
 
 - [Recovery planning](references/recovery-planning.md): readiness bands,
   push/pull/legs rotation, Oura freshness, and combined recommendations.
+- [Activity details and health exports](references/activity-details-and-export.md):
+  performed-set inspection, duration semantics, export options, and private
+  file handling.
 - [Workout authoring](references/workout-authoring.md): uniform and per-set
   shapes, full-replacement edits, blocks, timed movements, alternating reps,
   and setup compatibility.
 - [Strength and activity history](references/strength-and-activity-history.md):
-  headline versus goal metrics, calendar-day coverage, activity-ID discovery,
-  source-relative completeness, and presentation truncation.
+  headline versus goal metrics, calendar-day Strength Score coverage, and
+  workout-activity pagination.

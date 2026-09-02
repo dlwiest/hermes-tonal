@@ -17,6 +17,8 @@ that logic into another CLI.
 - `scripts/tonal_mcp_server.py` launches the built MCP server with a minimal
   environment, reading credentials from the Keychain first and the env file
   second.
+- `scripts/tonal_health_export.py` runs the npm client's health export through
+  Node.js, writes private JSON to disk, and prints only the resulting path.
 - `config/` contains read-only and full-access Hermes MCP snippets.
 - `skills/health/tonal/` contains the companion skill and its runbooks.
 
@@ -48,6 +50,22 @@ The launcher defaults to:
 ```text
 ~/Projects/ts-tonal-mcp/dist/index.js
 ```
+
+The launcher always runs this built `dist/` file; it does not execute the MCP
+checkout's TypeScript source. After a new MCP release or tool change reaches
+remy-mac, update and rebuild that checkout:
+
+```bash
+cd ~/Projects/ts-tonal-mcp
+git pull
+npm install
+npm run build
+```
+
+Then reload the Hermes gateway as described below. This is required before
+`get_workout_activity_details` and `get_workout_summary` can appear. Until both
+the rebuild and gateway reload happen, the running integration continues to
+expose the old tool set.
 
 If the MCP repo lives elsewhere, override the path. `TONAL_MCP_SERVER_PATH` is a
 non-secret setting, so it belongs in `config.yaml` rather than the env file —
@@ -116,10 +134,10 @@ reports which source it used on stderr at startup. Do not put credentials in
 
 Choose one config file:
 
-- `config/mcp_servers.tonal.yaml` exposes eleven read-only tools. This is the
+- `config/mcp_servers.tonal.yaml` exposes fifteen read-only tools. This is the
   recommended default because an accidental call cannot change custom
   workouts.
-- `config/mcp_servers.tonal.full.yaml` exposes all 14 tools, including create,
+- `config/mcp_servers.tonal.full.yaml` exposes all 18 tools, including create,
   update, and delete.
 
 Merge the `tonal` mapping under the existing `mcp_servers` key in
@@ -154,7 +172,9 @@ start `hermes gateway` again. If it is supervised, use the same service manager
 that normally restarts it.
 
 This reload is required before the Tonal tools appear in Telegram sessions.
-Changing the YAML while the gateway keeps running is not enough.
+Changing the YAML or rebuilding `dist/` while the gateway keeps running is not
+enough. Tools added during an existing session are also invisible to that
+session, so start a fresh session after the reload.
 
 ## 5. Install the companion skill
 
@@ -199,13 +219,13 @@ hermes mcp list
 The recommended profile should show the Tonal equivalent of:
 
 ```text
-tonal ... 11 selected ✓ enabled
+tonal ... 15 selected ✓ enabled
 ```
 
 The full profile should show:
 
 ```text
-tonal ... 14 selected ✓ enabled
+tonal ... 18 selected ✓ enabled
 ```
 
 If it reports zero selected tools, check that `tools.include` uses raw names
@@ -240,8 +260,9 @@ own `env:` block, and never consults a skill. The skill-declaration mechanism
 sandboxes, which this skill does not use. Declaring the variables would have
 prompted for credentials the Keychain already holds, for no benefit.
 
-If a future CLI one-shot is ever added here, that is when the declaration
-becomes necessary.
+The health-export one-shot uses the same credential resolver and minimal child
+environment as the MCP launcher. It does not rely on skill environment
+declarations.
 
 ## Related projects
 
@@ -254,6 +275,6 @@ and workout-planning guidance is carried into the companion skill.
 - [`ts-tonal-client`](https://github.com/dlwiest/ts-tonal-client) provides the
   Tonal API client.
 
-There is intentionally no copied `tonal.mjs` or one-shot CLI here. If a future
-cron workflow has a concrete need that MCP cannot serve, a narrow one-shot can
-be considered then without duplicating workout conversion.
+The health-export script is intentionally narrow: it calls the npm client's
+read-only export API and keeps the potentially large result on disk rather
+than routing it through MCP and model context.
