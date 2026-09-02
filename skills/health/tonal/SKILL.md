@@ -29,6 +29,7 @@ The raw MCP names in Hermes configuration become these callable tools:
 - `mcp__tonal__get_recent_progress`
 - `mcp__tonal__get_goal_metrics`
 - `mcp__tonal__get_strength_scores`
+- `mcp__tonal__list_workout_activities`
 - `mcp__tonal__get_recent_workouts`
 - `mcp__tonal__list_custom_workouts`
 - `mcp__tonal__delete_custom_workout`
@@ -40,7 +41,7 @@ The raw MCP names in Hermes configuration become these callable tools:
 - `mcp__tonal__search_movements`
 - `mcp__tonal__estimate_workout_duration`
 
-A read-only installation exposes twelve of these. The three write tools are
+A read-only installation exposes thirteen of these. The three write tools are
 `create_workout`, `update_workout`, and `delete_custom_workout`. If a write
 tool is absent, explain that the read-only profile is active. Do not try to
 work around the allowlist.
@@ -59,6 +60,7 @@ Reach for Tonal when the user asks about:
 - creating, editing, or deleting a custom workout
 - weekly goal targets and whether the current week is on pace
 - headline Strength Score by body region or per-activity strength trends
+- performed workout activity dates and IDs for later activity inspection
 - how long a planned workout will take, before committing to it
 
 Use current tool data rather than remembered readiness or workout state.
@@ -131,9 +133,19 @@ For history or trends, choose the narrowest tool:
 - `get_strength_scores` for Tonal's headline current Strength Score and its
   per-activity trend. This is distinct from the weekly Functional Strength
   Score reported by `get_goal_metrics`.
+- `list_workout_activities` to enumerate performed activity IDs for later
+  inspection. Its `days` argument is a calendar-day window, while
+  `startIndex` and `pageSize` only page the already-fetched presentation.
 
-Load [references/strength-scores.md](references/strength-scores.md) before
-interpreting Strength Score coverage or an empty history window.
+Load [references/strength-and-activity-history.md](references/strength-and-activity-history.md)
+before interpreting Strength Score coverage or enumerating activity IDs.
+
+For movement discovery or workout planning:
+
+- `get_movements` to browse the catalog or filter it by muscle groups.
+- `search_movements` to resolve an exact movement with more specific filters.
+- `estimate_workout_duration` to estimate a complete planned workout before
+  creating or updating anything.
 
 Goal metrics are weekly, and Tonal serves a target for a week whether or not
 it was trained. So a target with no actual means that week has no recorded
@@ -202,5 +214,6 @@ actual tool result rather than assuming Tonal accepted the change.
 - [Workout authoring](references/workout-authoring.md): uniform and per-set
   shapes, full-replacement edits, blocks, timed movements, alternating reps,
   and setup compatibility.
-- [Strength scores](references/strength-scores.md): headline versus goal
-  metrics, calendar-day coverage, empty windows, changes, and truncation.
+- [Strength and activity history](references/strength-and-activity-history.md):
+  headline versus goal metrics, calendar-day coverage, activity-ID discovery,
+  source-relative completeness, and presentation truncation.
