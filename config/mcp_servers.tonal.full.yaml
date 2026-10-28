@@ -30,6 +30,7 @@ mcp_servers:
         - get_recent_progress
         - get_goal_metrics
         - get_strength_scores
+        - get_achievements
         - list_workout_activities
         - get_workout_activity_details
         - get_workout_summary

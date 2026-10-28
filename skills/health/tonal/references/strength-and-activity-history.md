@@ -27,6 +27,23 @@ context is needed, retry with a wider calendar-day window or omit `days`.
 - The activity count is the number of scored activities Tonal returned for the calendar window. It is independent of the numeric `days` value.
 - The detail list contains at most the ten newest history points. A `showing 10 of N` label means the change and coverage summary still use all `N` returned points, while only the display is truncated.
 
+## Achievements
+
+Use `mcp__tonal__get_achievements` when the user asks about badges,
+milestones, or how close the next one is.
+
+- Two counts appear. `totalAchievements` is distinct achievements. The
+  times-earned count is higher because repeatable badges, such as Friday the
+  13th, appear once per time earned. Report the distinct count as "achievements
+  earned" and never call the difference an error.
+- Next milestones are Tonal's own upcoming targets, described in plain words
+  (for example "Lifted 7 million lbs on Tonal"). The tool does not report
+  progress toward them. For progress, combine the milestone with
+  `get_user_stats` totals rather than estimating it.
+- Earned entries are newest first, dated in the account's local time. The
+  list shows the 15 most recent by default. Pass `limit` when the user asks
+  for older ones, and say when the list is truncated.
+
 ## Enumerating Activity IDs
 
 `list_workout_activities` passes `offset` and `limit` to Tonal's completed

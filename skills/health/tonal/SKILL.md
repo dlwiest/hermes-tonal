@@ -29,6 +29,7 @@ The raw MCP names in Hermes configuration become these callable tools:
 - `mcp__tonal__get_recent_progress`
 - `mcp__tonal__get_goal_metrics`
 - `mcp__tonal__get_strength_scores`
+- `mcp__tonal__get_achievements`
 - `mcp__tonal__list_workout_activities`
 - `mcp__tonal__get_workout_activity_details`
 - `mcp__tonal__get_workout_summary`
@@ -43,7 +44,7 @@ The raw MCP names in Hermes configuration become these callable tools:
 - `mcp__tonal__search_movements`
 - `mcp__tonal__estimate_workout_duration`
 
-A read-only installation exposes fifteen of these. The three write tools are
+A read-only installation exposes sixteen of these. The three write tools are
 `create_workout`, `update_workout`, and `delete_custom_workout`. If a write
 tool is absent, explain that the read-only profile is active. Do not try to
 work around the allowlist.
@@ -62,6 +63,7 @@ Reach for Tonal when the user asks about:
 - creating, editing, or deleting a custom workout
 - weekly goal targets and whether the current week is on pace
 - headline Strength Score by body region or per-activity strength trends
+- achievements, badges, or how close the next milestone is
 - performed workout activity dates and IDs for later activity inspection
 - a performed session's per-set reps, resistance, one-rep max, volume, or
   range of motion
@@ -143,6 +145,10 @@ For history or trends, choose the narrowest tool:
 - `get_strength_scores` for Tonal's headline current Strength Score and its
   per-activity trend. This is distinct from the weekly Functional Strength
   Score reported by `get_goal_metrics`.
+- `get_achievements` for achievements earned and the next milestones.
+  The distinct total is lower than the times-earned count because repeatable
+  badges, such as Friday the 13th, are listed once per time earned. Pass
+  `limit` for more than the 15 most recent.
 - `list_workout_activities` for deep enumeration of older completed activity
   records. Tonal selects pages oldest first; the tool sorts only the selected
   page newest first, so offset 0 is not recent history.
@@ -255,5 +261,5 @@ actual tool result rather than assuming Tonal accepted the change.
   shapes, full-replacement edits, blocks, timed movements, alternating reps,
   and setup compatibility.
 - [Strength and activity history](references/strength-and-activity-history.md):
-  headline versus goal metrics, calendar-day Strength Score coverage, and
-  workout-activity pagination.
+  headline versus goal metrics, calendar-day Strength Score coverage,
+  workout-activity pagination, and achievements.
