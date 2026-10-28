@@ -38,8 +38,11 @@ milestones, or how close the next one is.
   earned" and never call the difference an error.
 - Next milestones are Tonal's own upcoming targets, described in plain words
   (for example "Lifted 7 million lbs on Tonal"). The tool does not report
-  progress toward them. For progress, combine the milestone with
-  `get_user_stats` totals rather than estimating it.
+  progress toward them. `get_user_stats` can estimate progress only for workout
+  count and volume milestones (Total Workouts, Total Volume). Its streak counts
+  workouts, not weeks, and its Total Time is wall clock, not time under tension,
+  so week-streak, time-under-tension, and weekly-target milestones cannot be
+  estimated. Say so rather than approximating.
 - Earned entries are newest first, dated in the account's local time. The
   list shows the 15 most recent by default. Pass `limit` when the user asks
   for older ones, and say when the list is truncated.
