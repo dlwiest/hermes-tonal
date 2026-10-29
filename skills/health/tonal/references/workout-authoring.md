@@ -55,8 +55,31 @@ For a timed movement, use `duration` in seconds instead of `reps`:
 }
 ```
 
-`weight` is Tonal's weight percentage from 0 through 100, not a value in
-pounds. The MCP tool schema determines which top-level fields are accepted.
+`weight` is Tonal's weight percentage from 0 through 100: a share of Tonal's
+suggested weight for that movement, not a value in pounds. The MCP
+tool schema determines which top-level fields are accepted.
+
+## Prescribing in pounds
+
+When the user names a load in pounds, send `weightLb` instead of `weight`
+(exercise level or per set, never both at the same level). The server
+converts each set to a percentage of Tonal's suggested weight from the
+movement's most recent performance at the same reps (or duration, for timed
+movements) and lists each conversion in the response.
+
+- Tonal's suggestion depends on the prescribed reps: fewer reps, higher
+  suggestion. Call `mcp__tonal__get_suggested_weights` first to see Tonal's
+  last recorded suggestion per rep count (an estimate of what 100% loads) and
+  pick realistic targets.
+- Conversion is refused for off-machine movements, for a rep count the
+  movement has no recent suggestion at (the error lists the rep counts that
+  do), and for targets above 100% of the suggestion. Fall back to `weight`,
+  or pick a listed rep count, and tell the user why.
+- The suggestion comes from the most recent performed set at that rep count,
+  so Tonal may already have changed it, and it rises as Tonal progresses the
+  user. The stored percentage scales with it. Eccentric, chains, and Smart Flex
+  also change the loaded weight. Report the converted pounds as approximate,
+  never as guaranteed.
 
 ## Per-set programming with `setDetails`
 
@@ -93,6 +116,7 @@ Each entry describes one Tonal set. Supported per-set keys are:
 | `reps` | Prescribed total repetitions for a rep-based movement |
 | `duration` | Prescribed seconds for a duration-based movement |
 | `weight` | Tonal weight percentage from 0 through 100 |
+| `weightLb` | Target pounds, converted to `weight` by the server |
 | `warmUp` | Marks that set as a warm-up |
 | `dropSet` | Marks that set as a drop set |
 | `burnout` | Enables burnout for that set when the movement supports it |

@@ -42,9 +42,10 @@ The raw MCP names in Hermes configuration become these callable tools:
 - `mcp__tonal__update_workout`
 - `mcp__tonal__get_movements`
 - `mcp__tonal__search_movements`
+- `mcp__tonal__get_suggested_weights`
 - `mcp__tonal__estimate_workout_duration`
 
-A read-only installation exposes sixteen of these. The three write tools are
+A read-only installation exposes seventeen of these. The three write tools are
 `create_workout`, `update_workout`, and `delete_custom_workout`. If a write
 tool is absent, explain that the read-only profile is active. Do not try to
 work around the allowlist.
@@ -172,6 +173,9 @@ For movement discovery or workout planning:
 
 - `get_movements` to browse the catalog or filter it by muscle groups.
 - `search_movements` to resolve an exact movement with more specific filters.
+- `get_suggested_weights` for Tonal's last recorded suggested weight in pounds
+  per movement and rep count: an estimate of what a 100% `weight` loads at
+  that prescription.
 - `estimate_workout_duration` to estimate a complete planned workout before
   creating or updating anything.
 
@@ -220,6 +224,7 @@ Core rules:
   Ten per side must be programmed as 20 total reps.
 - Match rep-based movements with `reps` and timed movements with `duration`
   in seconds.
+- For loads in pounds, use `weightLb`; `weight` is a percentage.
 - Do not guess setup metadata or mode support when a result omits it.
 
 ## Mutation safety
