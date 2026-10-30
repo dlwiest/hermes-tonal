@@ -44,8 +44,12 @@ The raw MCP names in Hermes configuration become these callable tools:
 - `mcp__tonal__search_movements`
 - `mcp__tonal__get_suggested_weights`
 - `mcp__tonal__estimate_workout_duration`
+- `mcp__tonal__search_workout_library`
+- `mcp__tonal__search_program_library`
+- `mcp__tonal__get_library_workout`
+- `mcp__tonal__get_library_program`
 
-A read-only installation exposes seventeen of these. The three write tools are
+A read-only installation exposes twenty-one of these. The three write tools are
 `create_workout`, `update_workout`, and `delete_custom_workout`. If a write
 tool is absent, explain that the read-only profile is active. Do not try to
 work around the allowlist.
@@ -72,6 +76,8 @@ Reach for Tonal when the user asks about:
 - exporting private health data to a local file without putting it in model
   context
 - how long a planned workout will take, before committing to it
+- finding a Tonal guided workout or program to do, by length, body area,
+  level, training type, schedule, or the equipment the user owns
 
 Use current tool data rather than remembered readiness or workout state.
 Readiness changes over time. If a tool fails, report the failure without
@@ -178,6 +184,10 @@ For movement discovery or workout planning:
   that prescription.
 - `estimate_workout_duration` to estimate a complete planned workout before
   creating or updating anything.
+- `search_workout_library` and `search_program_library` to find Tonal's
+  guided workouts and programs, then `get_library_workout` for a workout's
+  exercises or `get_library_program` for a program's schedule. Load
+  [references/guided-library.md](references/guided-library.md) first.
 
 Goal metrics are weekly, and Tonal serves a target for a week whether or not
 it was trained. So a target with no actual means that week has no recorded
@@ -268,3 +278,5 @@ actual tool result rather than assuming Tonal accepted the change.
 - [Strength and activity history](references/strength-and-activity-history.md):
   headline versus goal metrics, calendar-day Strength Score coverage,
   workout-activity pagination, and achievements.
+- [Guided library](references/guided-library.md): searching Tonal's guided
+  workouts and programs, equipment filters, paging, and saving a custom copy.

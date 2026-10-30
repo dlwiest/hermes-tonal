@@ -39,3 +39,7 @@ mcp_servers:
         - search_movements
         - get_suggested_weights
         - estimate_workout_duration
+        - search_workout_library
+        - search_program_library
+        - get_library_workout
+        - get_library_program
